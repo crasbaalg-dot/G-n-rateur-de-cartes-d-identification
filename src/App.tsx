@@ -281,14 +281,14 @@ export default function App() {
               wilayaId = foundWilaya.id;
             }
 
-            const rawPhotoUrl = findValue(row, ['الصورة الشخصية', 'رابط الصورة', 'الصورة', 'Photo', 'Photo URL', 'PhotoURL']);
+            const rawPhotoUrl = findValue(row, ['الصورة الشخصية', 'رابط الصورة', 'الصورة', 'Photo', 'Photo URL', 'PhotoURL'])?.toString().trim();
             let photoUrl = rawPhotoUrl;
             
-            // Transform Google Drive links to direct download links
-            if (rawPhotoUrl && rawPhotoUrl.includes('drive.google.com')) {
+            // Transform Google Drive links to direct viewable links
+            if (rawPhotoUrl && (rawPhotoUrl.includes('drive.google.com') || rawPhotoUrl.includes('docs.google.com'))) {
               const fileIdMatch = rawPhotoUrl.match(/\/d\/([^/]+)/) || rawPhotoUrl.match(/id=([^&]+)/);
               if (fileIdMatch && fileIdMatch[1]) {
-                photoUrl = `https://lh3.googleusercontent.com/d/${fileIdMatch[1]}=s1000`;
+                photoUrl = `https://drive.google.com/thumbnail?id=${fileIdMatch[1]}&sz=w1000`;
               }
             }
 
@@ -424,7 +424,7 @@ export default function App() {
                 <div className="flex flex-col gap-[2mm] shrink-0">
                   <div className="w-[26mm] h-[32mm] bg-white border-[0.5mm] border-red-600 rounded-[4px] overflow-hidden flex items-center justify-center relative shadow-md">
                     {data.photoUrl ? (
-                      <img src={data.photoUrl} alt="Volunteer" className="w-full h-full object-cover" />
+                      <img src={data.photoUrl} alt="Volunteer" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                     ) : (
                       <User className="text-gray-100 w-12 h-12" />
                     )}
