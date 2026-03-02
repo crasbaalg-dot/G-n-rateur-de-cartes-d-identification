@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import * as htmlToImage from 'html-to-image';
 import Papa from 'papaparse';
+import JSZip from 'jszip';
 
 // --- الثوابت والبيانات ---
 const WILAYAS = [
@@ -133,6 +134,57 @@ export default function App() {
   const [showInstructions, setShowInstructions] = useState(false);
 
   const [printingCard, setPrintingCard] = useState<VolunteerData | null>(null);
+  const [isDownloadingAll, setIsDownloadingAll] = useState(false);
+
+  const downloadAllCards = async () => {
+    if (bulkData.length === 0) return;
+    setIsDownloadingAll(true);
+    const zip = new JSZip();
+    const folder = zip.folder("CRA_Cards");
+
+    try {
+      // We need to render each card to capture it. 
+      // Since they are already in the DOM in bulk mode, we can target them by ID or use refs if we had them in a list.
+      // However, the Card component has internal refs. 
+      // A better way is to use the DOM elements directly if possible, or trigger a capture for each.
+      
+      const cardWrappers = document.querySelectorAll('.card-wrapper');
+      
+      for (let i = 0; i < bulkData.length; i++) {
+        const data = bulkData[i];
+        const wrapper = cardWrappers[i];
+        if (!wrapper) continue;
+
+        const frontEl = wrapper.querySelector('.card-front') as HTMLElement;
+        const backEl = wrapper.querySelector('.card-back') as HTMLElement;
+
+        const options = { pixelRatio: 4, quality: 1, backgroundColor: '#ffffff' };
+
+        if (frontEl) {
+          const frontDataUrl = await htmlToImage.toPng(frontEl, options);
+          const frontBase64 = frontDataUrl.split(',')[1];
+          folder?.file(`${i + 1}-${data.lastNameAr}-${data.firstNameAr}-front.png`, frontBase64, { base64: true });
+        }
+
+        if (backEl) {
+          const backDataUrl = await htmlToImage.toPng(backEl, options);
+          const backBase64 = backDataUrl.split(',')[1];
+          folder?.file(`${i + 1}-${data.lastNameAr}-${data.firstNameAr}-back.png`, backBase64, { base64: true });
+        }
+      }
+
+      const content = await zip.generateAsync({ type: "blob" });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(content);
+      link.download = `CRA-Cards-Bulk-${new Date().getTime()}.zip`;
+      link.click();
+    } catch (error) {
+      console.error("Error generating ZIP:", error);
+      setErrorMsg("حدث خطأ أثناء تحميل الملف المضغوط.");
+    } finally {
+      setIsDownloadingAll(false);
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -352,10 +404,17 @@ export default function App() {
       const targetRef = side === 'front' ? refFront : (side === 'back' ? refBack : refBoth);
       if (!targetRef.current) return;
       try {
-        const options = { pixelRatio: 4, quality: 1, backgroundColor: '#ffffff' };
+        const options = { 
+          pixelRatio: 5, // Higher quality for precise edges
+          quality: 1, 
+          backgroundColor: '#ffffff',
+          style: {
+            borderRadius: '0', // Sharp edges for download
+          }
+        };
         const dataUrl = format === 'png' ? await htmlToImage.toPng(targetRef.current, options) : await htmlToImage.toJpeg(targetRef.current, options);
         const link = document.createElement('a');
-        link.download = `CRA-Card-${data.lastNameAr}-${side}.${format}`;
+        link.download = `CRA-Card-${data.lastNameAr}-${data.firstNameAr}-${side}.${format}`;
         link.href = dataUrl;
         link.click();
       } catch (e) { console.error(e); }
@@ -366,7 +425,7 @@ export default function App() {
     const localBothRef = useRef<HTMLDivElement>(null);
 
     return (
-      <div className={`card-wrapper flex flex-col items-center ${isBulk ? 'mb-12 pb-12 border-b border-slate-200' : ''} ${printingCard && printingCard.volunteerId !== data.volunteerId ? 'print:hidden' : ''}`}>
+      <div className={`card-wrapper flex flex-col items-center ${isBulk ? 'mb-12 pb-12 border-b border-slate-200 print:mb-0 print:pb-0 print:border-none' : ''} ${printingCard && printingCard.volunteerId !== data.volunteerId ? 'print:hidden' : ''}`}>
         {/* Individual Actions (Bulk Mode Only) */}
         {isBulk && (
           <div className="flex gap-2 mb-4 no-print">
@@ -383,7 +442,7 @@ export default function App() {
           {/* Front Side */}
           <div 
             ref={isBulk ? localFrontRef : cardRef}
-            className="card-container bg-white relative overflow-hidden rounded-[10px] shadow-2xl border border-gray-200 print:shadow-none print:border print:border-gray-300 shrink-0"
+            className="card-container card-front bg-white relative overflow-hidden rounded-[10px] shadow-2xl border border-gray-200 print:shadow-none print:border print:border-gray-300 shrink-0"
             style={{
               width: size.width, 
               height: size.height,
@@ -490,7 +549,7 @@ export default function App() {
           {/* Back Side */}
           <div 
             ref={isBulk ? localBackRef : cardBackRef}
-            className="card-container bg-white relative overflow-hidden rounded-[10px] shadow-2xl border border-gray-200 print:shadow-none print:border print:border-gray-300 shrink-0"
+            className="card-container card-back bg-white relative overflow-hidden rounded-[10px] shadow-2xl border border-gray-200 print:shadow-none print:border print:border-gray-300 shrink-0"
             style={{
               width: size.width, 
               height: size.height,
@@ -561,16 +620,28 @@ export default function App() {
             top: 0;
             width: 100%;
           }
+          @page {
+            size: auto;
+            margin: 0mm;
+          }
           .card-wrapper {
             page-break-inside: avoid;
-            margin-bottom: 10mm;
+            margin-bottom: 5mm;
             display: flex;
+            flex-direction: column;
+            align-items: center;
             justify-content: center;
           }
           .card-container {
             box-shadow: none !important;
-            border: 0.2mm solid #eee !important;
+            border: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            page-break-inside: avoid;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
           }
+          .no-print { display: none !important; }
         }
 
         .animate-in {
@@ -908,6 +979,16 @@ export default function App() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
+                  {viewMode === 'bulk' && (
+                    <button 
+                      onClick={downloadAllCards} 
+                      disabled={isDownloadingAll}
+                      className="flex items-center gap-2 bg-slate-800 hover:bg-black text-white px-4 py-2.5 rounded-lg font-bold transition disabled:opacity-50"
+                    >
+                      {isDownloadingAll ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                      تحميل الكل (ZIP)
+                    </button>
+                  )}
                   {viewMode === 'single' && (
                     <>
                       <button onClick={() => exportAsImage('png', 'front')} className="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition" title="تصدير الوجه PNG">
