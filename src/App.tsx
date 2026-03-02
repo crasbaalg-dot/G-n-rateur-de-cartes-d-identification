@@ -139,48 +139,62 @@ export default function App() {
   const downloadAllCards = async () => {
     if (bulkData.length === 0) return;
     setIsDownloadingAll(true);
-    const zip = new JSZip();
-    const folder = zip.folder("CRA_Cards");
-
+    setErrorMsg('');
+    
     try {
-      // We need to render each card to capture it. 
-      // Since they are already in the DOM in bulk mode, we can target them by ID or use refs if we had them in a list.
-      // However, the Card component has internal refs. 
-      // A better way is to use the DOM elements directly if possible, or trigger a capture for each.
-      
-      const cardWrappers = document.querySelectorAll('.card-wrapper');
+      const zip = new JSZip();
       
       for (let i = 0; i < bulkData.length; i++) {
         const data = bulkData[i];
-        const wrapper = cardWrappers[i];
+        const wrapper = document.getElementById(`card-wrapper-${data.volunteerId}`);
         if (!wrapper) continue;
 
         const frontEl = wrapper.querySelector('.card-front') as HTMLElement;
         const backEl = wrapper.querySelector('.card-back') as HTMLElement;
 
-        const options = { pixelRatio: 4, quality: 1, backgroundColor: '#ffffff' };
+        const options = { 
+          pixelRatio: 2, 
+          quality: 0.95, 
+          backgroundColor: '#ffffff',
+          cacheBust: true
+        };
 
         if (frontEl) {
           const frontDataUrl = await htmlToImage.toPng(frontEl, options);
           const frontBase64 = frontDataUrl.split(',')[1];
-          folder?.file(`${i + 1}-${data.lastNameAr}-${data.firstNameAr}-front.png`, frontBase64, { base64: true });
+          zip.file(`${i + 1}-${data.lastNameAr}-${data.firstNameAr}-front.png`, frontBase64, { base64: true });
         }
 
         if (backEl) {
           const backDataUrl = await htmlToImage.toPng(backEl, options);
           const backBase64 = backDataUrl.split(',')[1];
-          folder?.file(`${i + 1}-${data.lastNameAr}-${data.firstNameAr}-back.png`, backBase64, { base64: true });
+          zip.file(`${i + 1}-${data.lastNameAr}-${data.firstNameAr}-back.png`, backBase64, { base64: true });
+        }
+        
+        // Small delay to prevent browser freezing and allow UI updates
+        if (i % 5 === 0) {
+          await new Promise(resolve => setTimeout(resolve, 100));
         }
       }
 
-      const content = await zip.generateAsync({ type: "blob" });
+      const content = await zip.generateAsync({ 
+        type: "blob",
+        compression: "DEFLATE",
+        compressionOptions: { level: 6 }
+      });
+      
       const link = document.createElement('a');
       link.href = URL.createObjectURL(content);
       link.download = `CRA-Cards-Bulk-${new Date().getTime()}.zip`;
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
+      
+      // Cleanup
+      setTimeout(() => URL.revokeObjectURL(link.href), 1000);
     } catch (error) {
       console.error("Error generating ZIP:", error);
-      setErrorMsg("حدث خطأ أثناء تحميل الملف المضغوط.");
+      setErrorMsg("حدث خطأ أثناء إنشاء الملف المضغوط. يرجى المحاولة مرة أخرى.");
     } finally {
       setIsDownloadingAll(false);
     }
@@ -261,24 +275,23 @@ export default function App() {
 
     try {
       const options = { 
-        pixelRatio: 4, 
+        pixelRatio: 3, 
         quality: 1,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        cacheBust: true
       };
       
-      let dataUrl;
-      if (format === 'png') {
-        dataUrl = await htmlToImage.toPng(targetRef.current, options);
-      } else {
-        dataUrl = await htmlToImage.toJpeg(targetRef.current, options);
-      }
+      const dataUrl = format === 'png' ? await htmlToImage.toPng(targetRef.current, options) : await htmlToImage.toJpeg(targetRef.current, options);
       
       const link = document.createElement('a');
       link.download = `CRA-Card-${side}-${formData.lastNameAr}-${formData.firstNameAr}.${format}`;
       link.href = dataUrl;
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
     } catch (err) {
       console.error('Export failed', err);
+      setErrorMsg("فشل تصدير الصورة. يرجى المحاولة مرة أخرى.");
     }
   };
 
@@ -400,24 +413,30 @@ export default function App() {
     
     const otherAttributes = data.attributes.slice(data.role === 'رئيس خلية' ? 0 : 1).filter(a => a !== data.role && a !== data.cellName);
 
-    const exportIndividual = async (format: 'png' | 'jpeg', side: 'front' | 'back' | 'both', refFront: any, refBack: any, refBoth: any) => {
+    const exportIndividual = async (side: 'front' | 'back' | 'both', refFront: any, refBack: any, refBoth: any) => {
       const targetRef = side === 'front' ? refFront : (side === 'back' ? refBack : refBoth);
       if (!targetRef.current) return;
       try {
         const options = { 
-          pixelRatio: 5, // Higher quality for precise edges
+          pixelRatio: 3, 
           quality: 1, 
           backgroundColor: '#ffffff',
-          style: {
-            borderRadius: '0', // Sharp edges for download
-          }
+          cacheBust: true,
         };
-        const dataUrl = format === 'png' ? await htmlToImage.toPng(targetRef.current, options) : await htmlToImage.toJpeg(targetRef.current, options);
+        
+        const dataUrl = await htmlToImage.toPng(targetRef.current, options);
+        if (!dataUrl) throw new Error("Failed to generate image");
+        
         const link = document.createElement('a');
-        link.download = `CRA-Card-${data.lastNameAr}-${data.firstNameAr}-${side}.${format}`;
+        link.download = `CRA-Card-${data.lastNameAr}-${data.firstNameAr}-${side}.png`;
         link.href = dataUrl;
+        document.body.appendChild(link);
         link.click();
-      } catch (e) { console.error(e); }
+        document.body.removeChild(link);
+      } catch (e) { 
+        console.error(e);
+        setErrorMsg("فشل تحميل الصورة. يرجى المحاولة مرة أخرى.");
+      }
     };
 
     const localFrontRef = useRef<HTMLDivElement>(null);
@@ -425,14 +444,14 @@ export default function App() {
     const localBothRef = useRef<HTMLDivElement>(null);
 
     return (
-      <div className={`card-wrapper flex flex-col items-center ${isBulk ? 'mb-12 pb-12 border-b border-slate-200 print:mb-0 print:pb-0 print:border-none' : ''} ${printingCard && printingCard.volunteerId !== data.volunteerId ? 'print:hidden' : ''}`}>
+      <div id={`card-wrapper-${data.volunteerId}`} className={`card-wrapper flex flex-col items-center ${isBulk ? 'mb-12 pb-12 border-b border-slate-200 print:mb-0 print:pb-0 print:border-none' : ''} ${printingCard && printingCard.volunteerId !== data.volunteerId ? 'print:hidden' : ''}`}>
         {/* Individual Actions (Bulk Mode Only) */}
         {isBulk && (
           <div className="flex gap-2 mb-4 no-print">
             <button onClick={() => handleIndividualPrint(data)} className="flex items-center gap-1 bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 transition">
               <Printer className="w-3.5 h-3.5" /> طباعة هذه البطاقة
             </button>
-            <button onClick={() => exportIndividual('png', 'both', localFrontRef, localBackRef, localBothRef)} className="flex items-center gap-1 bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 transition">
+            <button onClick={() => exportIndividual('both', localFrontRef, localBackRef, localBothRef)} className="flex items-center gap-1 bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 transition">
               <ImageIcon className="w-3.5 h-3.5" /> تحميل الوجهين
             </button>
           </div>
@@ -605,10 +624,10 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-900 font-sans selection:bg-red-100" dir="rtl">
       <style dangerouslySetInnerHTML={{__html: `
-        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Inter:wght@400;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=Montserrat:wght@400;600;700;800&display=swap');
         
-        body { font-family: 'Cairo', sans-serif; }
-        .font-fr { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Tajawal', sans-serif; }
+        .font-fr { font-family: 'Montserrat', sans-serif; }
         
         @media print {
           body { background: white !important; }
