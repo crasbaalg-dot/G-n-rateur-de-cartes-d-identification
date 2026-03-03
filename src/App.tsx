@@ -11,7 +11,6 @@ import {
   CreditCard, 
   User, 
   FileText, 
-  Image as ImageIcon, 
   CheckCircle, 
   AlertCircle, 
   LayoutTemplate, 
@@ -24,11 +23,11 @@ import {
   MapPin,
   ExternalLink,
   ChevronRight,
-  ChevronLeft
+  ChevronLeft,
+  ChevronDown
 } from 'lucide-react';
-import * as htmlToImage from 'html-to-image';
+import { motion, AnimatePresence } from 'motion/react';
 import Papa from 'papaparse';
-import JSZip from 'jszip';
 
 // --- الثوابت والبيانات ---
 const WILAYAS = [
@@ -50,6 +49,168 @@ const WILAYAS = [
 ];
 
 const BLOOD_TYPES = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+
+const MaintenanceScreen = () => {
+  return (
+    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4 overflow-hidden relative font-sans" dir="rtl">
+      {/* Animated Background Elements - More Dynamic */}
+      <motion.div 
+        animate={{ 
+          scale: [1, 1.5, 1],
+          rotate: [0, 180, 360],
+          x: [-50, 50, -50],
+          y: [-50, 50, -50]
+        }}
+        transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+        className="absolute top-[-20%] left-[-20%] w-[600px] h-[600px] bg-red-600/10 rounded-full blur-[120px]"
+      />
+      <motion.div 
+        animate={{ 
+          scale: [1.2, 1, 1.2],
+          rotate: [360, 180, 0],
+          x: [50, -50, 50],
+          y: [50, -50, 50]
+        }}
+        transition={{ duration: 35, repeat: Infinity, ease: "linear" }}
+        className="absolute bottom-[-20%] right-[-20%] w-[700px] h-[700px] bg-red-800/10 rounded-full blur-[150px]"
+      />
+
+      {/* Grid Overlay */}
+      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 pointer-events-none" />
+      
+      {/* Scanning Line */}
+      <motion.div 
+        animate={{ top: ['-10%', '110%'] }}
+        transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+        className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-red-500/30 to-transparent z-20 pointer-events-none shadow-[0_0_15px_rgba(239,68,68,0.5)]"
+      />
+
+      {/* Content Container */}
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="z-10 max-w-4xl w-full bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-[40px] shadow-2xl p-8 md:p-16 text-center relative overflow-hidden"
+      >
+        {/* Inner Glow */}
+        <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent pointer-events-none" />
+
+        {/* Logo Section */}
+        <motion.div 
+          animate={{ 
+            y: [0, -10, 0],
+            filter: ["drop-shadow(0 0 0px rgba(239,68,68,0))", "drop-shadow(0 0 20px rgba(239,68,68,0.4))", "drop-shadow(0 0 0px rgba(239,68,68,0))"]
+          }}
+          transition={{ duration: 4, repeat: Infinity }}
+          className="mb-10 flex justify-center relative"
+        >
+          <img src={CRA_LOGO} alt="CRA Logo" className="h-40 w-auto brightness-110" />
+        </motion.div>
+
+        {/* Main Title - Arabic */}
+        <motion.h1 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-4xl md:text-5xl font-black text-white mb-6 leading-tight tracking-tight"
+        >
+          منصة إصدار بطاقات العضوية
+        </motion.h1>
+        
+        <motion.div 
+          animate={{ opacity: [0.5, 1, 0.5] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-red-500/10 border border-red-500/20 rounded-full text-red-400 font-bold text-sm mb-12"
+        >
+          <RefreshCw className="w-4 h-4 animate-spin" />
+          <span>قيد التطوير حالياً</span>
+        </motion.div>
+
+        {/* Description - Arabic */}
+        <div className="space-y-8 mb-16 text-slate-300">
+          <p className="text-xl leading-relaxed max-w-2xl mx-auto">
+            تخضع المنصة حالياً لعمليات تطوير مكثفة من قبل الفريق التقني للهلال الأحمر الجزائري - اللجنة الولائية سيدي بلعباس.
+          </p>
+          
+          <div className="bg-white/5 rounded-3xl p-8 border border-white/10 backdrop-blur-sm">
+            <h2 className="text-xs uppercase tracking-[0.3em] text-red-500 mb-8 font-black">الفريق التقني • TECH TEAM</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[
+                { ar: 'سكاف هشام', fr: 'SKAF Hisham' },
+                { ar: 'طوفان محمد', fr: 'TOUFAN Mohammad' },
+                { ar: 'أحمد عمر إيمان', fr: 'AHMED OMAR Imene' }
+              ].map((member, i) => (
+                <motion.div 
+                  key={member.ar}
+                  whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.08)" }}
+                  className="p-6 bg-white/5 rounded-2xl border border-white/5 flex flex-col items-center justify-center transition-colors group"
+                >
+                  <span className="font-bold text-white text-xl mb-2 group-hover:text-red-400 transition-colors">{member.ar}</span>
+                  <span className="text-[10px] text-slate-500 font-mono tracking-widest uppercase">{member.fr}</span>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+          
+          <motion.p 
+            animate={{ opacity: [0.4, 0.8, 0.4] }}
+            transition={{ duration: 3, repeat: Infinity }}
+            className="text-slate-400 italic font-medium text-lg"
+          >
+            ستكون متاحة للمسؤولين قريباً
+          </motion.p>
+        </div>
+
+        <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent my-12" />
+
+        {/* French Section */}
+        <div className="space-y-6 text-slate-300" dir="ltr">
+          <h2 className="text-3xl font-black text-white tracking-tight">Plateforme de Cartes d'Adhésion</h2>
+          <p className="text-lg text-red-500 font-bold uppercase tracking-wider">En cours de développement</p>
+          <p className="text-md max-w-2xl mx-auto opacity-80">
+            La plateforme est actuellement en cours de développement par l'équipe technique du Croissant-Rouge Algérien - Comité Provincial de Sidi Bel Abbès.
+          </p>
+          <p className="text-slate-500 italic font-medium">Sera bientôt disponible pour les responsables</p>
+        </div>
+      </motion.div>
+
+      {/* Floating Particles - More and Better */}
+      {[...Array(20)].map((_, i) => (
+        <motion.div
+          key={i}
+          animate={{
+            y: [0, -200, 0],
+            opacity: [0, 0.5, 0],
+            scale: [0.2, 1, 0.2],
+            x: [0, Math.random() * 100 - 50, 0],
+            rotate: [0, 360]
+          }}
+          transition={{
+            duration: 10 + Math.random() * 10,
+            repeat: Infinity,
+            delay: Math.random() * 5,
+            ease: "easeInOut"
+          }}
+          className="absolute w-1 h-1 bg-red-500/40 rounded-full pointer-events-none"
+          style={{
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`
+          }}
+        />
+      ))}
+
+      {/* Footer Branding */}
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.5 }}
+        className="mt-12 text-slate-600 text-[10px] font-mono tracking-[0.5em] uppercase flex items-center gap-4"
+      >
+        <div className="h-px w-12 bg-slate-800" />
+        <span>CRA Sidi Bel Abbès • Digital Transformation</span>
+        <div className="h-px w-12 bg-slate-800" />
+      </motion.div>
+    </div>
+  );
+};
 
 const CELLS = [
   'الدعم النفسي',
@@ -93,6 +254,7 @@ interface VolunteerData {
 }
 
 export default function App() {
+  const [showMaintenance, setShowMaintenance] = useState(true);
   const [formData, setFormData] = useState<VolunteerData>({
     firstNameAr: '',
     lastNameAr: '',
@@ -110,6 +272,20 @@ export default function App() {
   });
 
   const [selectedSize, setSelectedSize] = useState(CARD_SIZES.standard);
+
+  if (showMaintenance) {
+    return (
+      <>
+        <MaintenanceScreen />
+        <button 
+          onClick={() => setShowMaintenance(false)}
+          className="fixed bottom-4 right-4 text-[10px] text-slate-300 hover:text-slate-500 transition-colors z-50"
+        >
+          Dev Access
+        </button>
+      </>
+    );
+  }
   const [isGenerated, setIsGenerated] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [sheetUrl, setSheetUrl] = useState('');
@@ -134,69 +310,15 @@ export default function App() {
   const [showInstructions, setShowInstructions] = useState(false);
 
   const [printingCard, setPrintingCard] = useState<VolunteerData | null>(null);
-  const [isDownloadingAll, setIsDownloadingAll] = useState(false);
 
-  const downloadAllCards = async () => {
-    if (bulkData.length === 0) return;
-    setIsDownloadingAll(true);
-    setErrorMsg('');
-    
-    try {
-      const zip = new JSZip();
-      
-      for (let i = 0; i < bulkData.length; i++) {
-        const data = bulkData[i];
-        const wrapper = document.getElementById(`card-wrapper-${data.volunteerId}`);
-        if (!wrapper) continue;
-
-        const frontEl = wrapper.querySelector('.card-front') as HTMLElement;
-        const backEl = wrapper.querySelector('.card-back') as HTMLElement;
-
-        const options = { 
-          pixelRatio: 2, 
-          quality: 0.95, 
-          backgroundColor: '#ffffff',
-          cacheBust: true
-        };
-
-        if (frontEl) {
-          const frontDataUrl = await htmlToImage.toPng(frontEl, options);
-          const frontBase64 = frontDataUrl.split(',')[1];
-          zip.file(`${i + 1}-${data.lastNameAr}-${data.firstNameAr}-front.png`, frontBase64, { base64: true });
-        }
-
-        if (backEl) {
-          const backDataUrl = await htmlToImage.toPng(backEl, options);
-          const backBase64 = backDataUrl.split(',')[1];
-          zip.file(`${i + 1}-${data.lastNameAr}-${data.firstNameAr}-back.png`, backBase64, { base64: true });
-        }
-        
-        // Small delay to prevent browser freezing and allow UI updates
-        if (i % 5 === 0) {
-          await new Promise(resolve => setTimeout(resolve, 100));
-        }
-      }
-
-      const content = await zip.generateAsync({ 
-        type: "blob",
-        compression: "DEFLATE",
-        compressionOptions: { level: 6 }
-      });
-      
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(content);
-      link.download = `CRA-Cards-Bulk-${new Date().getTime()}.zip`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      // Cleanup
-      setTimeout(() => URL.revokeObjectURL(link.href), 1000);
-    } catch (error) {
-      console.error("Error generating ZIP:", error);
-      setErrorMsg("حدث خطأ أثناء إنشاء الملف المضغوط. يرجى المحاولة مرة أخرى.");
-    } finally {
-      setIsDownloadingAll(false);
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({ ...prev, photoUrl: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -222,17 +344,6 @@ export default function App() {
     setFormData(prev => ({ ...prev, attributes: newAttrs.length ? newAttrs : [''] }));
   };
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({ ...prev, photoUrl: reader.result as string }));
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   const handleGenerate = () => {
     if (!formData.firstNameAr || !formData.lastNameAr || !formData.wilaya || !formData.volunteerId) {
       setErrorMsg('يرجى ملء الحقول الأساسية (الاسم، اللقب، الولاية، رقم المتطوع).');
@@ -255,44 +366,6 @@ export default function App() {
 
   const handlePrint = () => {
     window.print();
-  };
-
-  const handleIndividualPrint = (data: VolunteerData) => {
-    setPrintingCard(data);
-    setTimeout(() => {
-      window.print();
-      setPrintingCard(null);
-    }, 100);
-  };
-
-  const exportAsImage = async (format: 'png' | 'jpeg', side: 'front' | 'back' | 'both' = 'front') => {
-    if (!cardRef.current && side === 'front') return;
-    if (!cardBackRef.current && side === 'back') return;
-    if (!combinedRef.current && side === 'both') return;
-
-    const targetRef = side === 'front' ? cardRef : (side === 'back' ? cardBackRef : combinedRef);
-    if (!targetRef.current) return;
-
-    try {
-      const options = { 
-        pixelRatio: 3, 
-        quality: 1,
-        backgroundColor: '#ffffff',
-        cacheBust: true
-      };
-      
-      const dataUrl = format === 'png' ? await htmlToImage.toPng(targetRef.current, options) : await htmlToImage.toJpeg(targetRef.current, options);
-      
-      const link = document.createElement('a');
-      link.download = `CRA-Card-${side}-${formData.lastNameAr}-${formData.firstNameAr}.${format}`;
-      link.href = dataUrl;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (err) {
-      console.error('Export failed', err);
-      setErrorMsg("فشل تصدير الصورة. يرجى المحاولة مرة أخرى.");
-    }
   };
 
   const fetchGoogleSheet = async () => {
@@ -369,7 +442,7 @@ export default function App() {
               bloodType: findValue(row, ['الزمرة الدموية', 'الزمرة', 'Blood Type', 'BloodType']),
               wilaya: wilayaId,
               volunteerId: findValue(row, ['رقم المتطوع', 'ID', 'Volunteer ID', 'VolunteerID']),
-              photoUrl: photoUrl,
+              photoUrl: photoUrl || null,
               attributes: [
                 findValue(row, ['الصفة 1', 'Attr 1']),
                 findValue(row, ['الصفة 2', 'Attr 2']),
@@ -402,6 +475,14 @@ export default function App() {
     }
   };
 
+  const handleIndividualPrint = (card: VolunteerData) => {
+    setPrintingCard(card);
+    setTimeout(() => {
+      window.print();
+      setPrintingCard(null);
+    }, 100);
+  };
+
   const Card = ({ data, size, isBulk = false }: { data: VolunteerData, size: typeof CARD_SIZES.standard, isBulk?: boolean }) => {
     const selectedWilaya = WILAYAS.find(w => w.id === data.wilaya);
     const qrData = `CRA-${data.wilaya}-${data.volunteerId}`;
@@ -412,32 +493,6 @@ export default function App() {
       : (data.attributes[0] || data.role);
     
     const otherAttributes = data.attributes.slice(data.role === 'رئيس خلية' ? 0 : 1).filter(a => a !== data.role && a !== data.cellName);
-
-    const exportIndividual = async (side: 'front' | 'back' | 'both', refFront: any, refBack: any, refBoth: any) => {
-      const targetRef = side === 'front' ? refFront : (side === 'back' ? refBack : refBoth);
-      if (!targetRef.current) return;
-      try {
-        const options = { 
-          pixelRatio: 3, 
-          quality: 1, 
-          backgroundColor: '#ffffff',
-          cacheBust: true,
-        };
-        
-        const dataUrl = await htmlToImage.toPng(targetRef.current, options);
-        if (!dataUrl) throw new Error("Failed to generate image");
-        
-        const link = document.createElement('a');
-        link.download = `CRA-Card-${data.lastNameAr}-${data.firstNameAr}-${side}.png`;
-        link.href = dataUrl;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      } catch (e) { 
-        console.error(e);
-        setErrorMsg("فشل تحميل الصورة. يرجى المحاولة مرة أخرى.");
-      }
-    };
 
     const localFrontRef = useRef<HTMLDivElement>(null);
     const localBackRef = useRef<HTMLDivElement>(null);
@@ -451,28 +506,26 @@ export default function App() {
             <button onClick={() => handleIndividualPrint(data)} className="flex items-center gap-1 bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 transition">
               <Printer className="w-3.5 h-3.5" /> طباعة هذه البطاقة
             </button>
-            <button onClick={() => exportIndividual('both', localFrontRef, localBackRef, localBothRef)} className="flex items-center gap-1 bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 transition">
-              <ImageIcon className="w-3.5 h-3.5" /> تحميل الوجهين
-            </button>
           </div>
         )}
 
-        <div ref={isBulk ? localBothRef : combinedRef} className="flex flex-col gap-4 items-center bg-white p-2 rounded-xl">
+        <div ref={isBulk ? localBothRef : combinedRef} className="flex flex-col gap-6 items-center bg-white p-4 print:p-0">
           {/* Front Side */}
           <div 
             ref={isBulk ? localFrontRef : cardRef}
-            className="card-container card-front bg-white relative overflow-hidden rounded-[10px] shadow-2xl border border-gray-200 print:shadow-none print:border print:border-gray-300 shrink-0"
+            className="card-container card-front bg-white relative overflow-hidden rounded-[10px] shadow-2xl border border-gray-200 print:shadow-none shrink-0"
             style={{
               width: size.width, 
               height: size.height,
               boxSizing: 'border-box',
-              backgroundImage: `url(${CRA_LOGO})`,
-              backgroundPosition: 'center',
-              backgroundRepeat: 'no-repeat',
-              backgroundSize: '80%',
               backgroundColor: '#ffffff'
             }}
           >
+            {/* Watermark Logo */}
+            <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none z-0">
+              <img src={CRA_LOGO} alt="" className="w-[80%] h-auto object-contain" crossOrigin="anonymous" />
+            </div>
+            
             <div className="absolute inset-0 bg-white bg-opacity-94 z-0"></div>
             
             {/* Decorative Elements */}
@@ -483,7 +536,7 @@ export default function App() {
               {/* Header */}
               <div className="flex justify-between items-start mb-[2mm]">
                 <div className="flex items-center gap-[3mm]">
-                  <img src={CRA_LOGO} alt="CRA" className="h-[12mm] w-auto object-contain" />
+                  <img src={CRA_LOGO} alt="CRA" className="h-[12mm] w-auto object-contain" crossOrigin="anonymous" />
                   <div className="flex flex-col items-start text-right">
                     <span className="text-[10px] font-black text-gray-900 leading-tight">الهلال الأحمر الجزائري</span>
                     <span className="text-[7.5px] font-bold text-gray-600 leading-tight font-fr" dir="ltr">Algerian Red Crescent</span>
@@ -499,14 +552,15 @@ export default function App() {
               {/* Content Area */}
               <div className="flex flex-1 gap-[4mm] items-start mt-[1mm]">
                 {/* Photo Section */}
-                <div className="flex flex-col gap-[2mm] shrink-0">
-                  <div className="w-[26mm] h-[32mm] bg-white border-[0.5mm] border-red-600 rounded-[4px] overflow-hidden flex items-center justify-center relative shadow-md">
-                    {data.photoUrl ? (
-                      <img src={data.photoUrl} alt="Volunteer" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                    ) : (
-                      <User className="text-gray-100 w-12 h-12" />
-                    )}
-                  </div>
+                <div className="w-[28mm] h-[35mm] bg-slate-50 rounded-[4px] border-[0.5mm] border-red-600/20 overflow-hidden shrink-0 shadow-inner flex items-center justify-center relative group">
+                  {data.photoUrl ? (
+                    <img src={data.photoUrl} alt="Volunteer" className="w-full h-full object-cover" crossOrigin="anonymous" />
+                  ) : (
+                    <div className="flex flex-col items-center gap-1 opacity-20">
+                      <User className="w-[12mm] h-[12mm] text-red-600" />
+                    </div>
+                  )}
+                  <div className="absolute bottom-0 left-0 right-0 h-[1mm] bg-red-600"></div>
                 </div>
 
                 {/* Data Section */}
@@ -568,7 +622,7 @@ export default function App() {
           {/* Back Side */}
           <div 
             ref={isBulk ? localBackRef : cardBackRef}
-            className="card-container card-back bg-white relative overflow-hidden rounded-[10px] shadow-2xl border border-gray-200 print:shadow-none print:border print:border-gray-300 shrink-0"
+            className="card-container card-back bg-white relative overflow-hidden rounded-[10px] shadow-2xl border border-gray-200 print:shadow-none shrink-0"
             style={{
               width: size.width, 
               height: size.height,
@@ -599,7 +653,7 @@ export default function App() {
                 </div>
                 
                 <div className="w-[28mm] flex flex-col items-center justify-center shrink-0 bg-white p-[2mm] rounded-xl shadow-inner border border-gray-50">
-                  <img src={qrCodeUrl} alt="QR Code" className="w-[22mm] h-[22mm]" />
+                  <img src={qrCodeUrl} alt="QR Code" className="w-[22mm] h-[22mm]" crossOrigin="anonymous" />
                   <span className="text-[7px] font-black text-gray-400 mt-[2mm] font-fr tracking-tighter" dir="ltr">{qrData}</span>
                 </div>
               </div>
@@ -630,37 +684,37 @@ export default function App() {
         .font-fr { font-family: 'Montserrat', sans-serif; }
         
         @media print {
-          body { background: white !important; }
+          body { background: white !important; margin: 0; padding: 0; }
           .no-print { display: none !important; }
           #print-area {
             display: block !important;
-            position: absolute;
-            left: 0;
-            top: 0;
             width: 100%;
+            margin: 0;
+            padding: 0;
           }
           @page {
-            size: auto;
-            margin: 0mm;
+            size: A4;
+            margin: 10mm;
           }
           .card-wrapper {
             page-break-inside: avoid;
-            margin-bottom: 5mm;
+            margin-bottom: 10mm;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
           }
           .card-container {
-            box-shadow: none !important;
-            border: none !important;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+            border: 0.1mm solid #cbd5e1 !important; /* Slightly more visible cutting guide */
             margin: 0 !important;
             padding: 0 !important;
             page-break-inside: avoid;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
+            display: block !important;
+            border-radius: 10px !important;
           }
-          .no-print { display: none !important; }
         }
 
         .animate-in {
@@ -801,6 +855,26 @@ export default function App() {
                   </div>
                 </div>
 
+                {/* Photo Upload */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-500 mr-1">الصورة الشخصية</label>
+                  <div className="flex items-center gap-4">
+                    <label className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed border-slate-200 hover:border-red-500 hover:bg-red-50 cursor-pointer transition group">
+                      <Upload className="w-5 h-5 text-slate-400 group-hover:text-red-600" />
+                      <span className="text-sm font-bold text-slate-500 group-hover:text-red-700">اختر صورة</span>
+                      <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
+                    </label>
+                    {formData.photoUrl && (
+                      <div className="relative w-12 h-12 rounded-lg overflow-hidden border border-red-200 shadow-sm">
+                        <img src={formData.photoUrl} alt="Preview" className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-green-500/20 flex items-center justify-center">
+                          <CheckCircle className="w-4 h-4 text-green-600" />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 {/* Birth & Blood */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
@@ -834,26 +908,6 @@ export default function App() {
                     <label className="text-xs font-bold text-slate-500 mr-1">رقم المتطوع</label>
                     <input name="volunteerId" value={formData.volunteerId} onChange={handleInputChange} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none transition font-fr bg-slate-50/50" dir="ltr" placeholder="123456" />
                   </div>
-                </div>
-
-                {/* Photo */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-500 mr-1">الصورة الشخصية</label>
-                  <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-slate-200 border-dashed rounded-xl cursor-pointer hover:bg-slate-50 transition group">
-                    <div className="flex flex-col items-center justify-center">
-                      {formData.photoUrl ? (
-                        <div className="flex items-center gap-2 text-green-600 font-bold text-sm">
-                          <CheckCircle className="w-4 h-4" /> تم الرفع
-                        </div>
-                      ) : (
-                        <div className="flex flex-col items-center text-slate-400 group-hover:text-red-500 transition">
-                          <Upload className="w-5 h-5 mb-1" />
-                          <span className="text-[10px] font-bold">اضغط للرفع</span>
-                        </div>
-                      )}
-                    </div>
-                    <input type="file" className="hidden" accept="image/*" onChange={handlePhotoUpload} />
-                  </label>
                 </div>
 
                 {/* Card Size Selection */}
@@ -998,26 +1052,6 @@ export default function App() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  {viewMode === 'bulk' && (
-                    <button 
-                      onClick={downloadAllCards} 
-                      disabled={isDownloadingAll}
-                      className="flex items-center gap-2 bg-slate-800 hover:bg-black text-white px-4 py-2.5 rounded-lg font-bold transition disabled:opacity-50"
-                    >
-                      {isDownloadingAll ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                      تحميل الكل (ZIP)
-                    </button>
-                  )}
-                  {viewMode === 'single' && (
-                    <>
-                      <button onClick={() => exportAsImage('png', 'front')} className="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition" title="تصدير الوجه PNG">
-                        <ImageIcon className="w-5 h-5" />
-                      </button>
-                      <button onClick={() => exportAsImage('png', 'both')} className="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition" title="تصدير الوجهين PNG">
-                        <LayoutTemplate className="w-5 h-5" />
-                      </button>
-                    </>
-                  )}
                   <button onClick={handlePrint} className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-lg font-bold transition shadow-lg shadow-red-100">
                     <Printer className="w-5 h-5" />
                     طباعة الكل
